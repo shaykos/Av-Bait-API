@@ -24,17 +24,18 @@ namespace API.Helpers
         }
 
         //create error json
-        internal static Dictionary<string, object> createErrorRes(string msg)
+        internal static Dictionary<string, object> createErrorRes(string msg = "")
         {
             Dictionary<string, object> res = new Dictionary<string, object>();
             res.Add("state", 0);
-            res.Add("message", msg);
+            if(msg != "")
+                res.Add("message", msg);
             return res;
         }
 
 
         //get the row item according to the list type
-        internal static List<Dictionary<string, object>> ConvertDataTableToList<T>(DataTable dt)
+        internal static List<Dictionary<string, object>> ConvertDataTableToList(DataTable dt)
         {
             List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
             Dictionary<string, object> row;

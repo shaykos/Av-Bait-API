@@ -6,13 +6,13 @@ using Newtonsoft.Json;
 
 namespace API.Helpers
 {
-    public class Save
+    public class Files
     {
-        internal static object Json(IHostingEnvironment appEnvironment, Dictionary<string, object> res)
+        internal static object SaveJson(IHostingEnvironment appEnvironment, Dictionary<string, object> res)
         {
             try
             {
-                string path = appEnvironment.ContentRootPath + @"/wwwroot/metadata/"; 
+                string path =$"{appEnvironment.ContentRootPath}/wwwroot/metadata/";
 
                 //Check if directory exist
                 if (!System.IO.Directory.Exists(path))
@@ -30,11 +30,11 @@ namespace API.Helpers
             }
         }
 
-        internal static object SaveImage(string base64, string name, string type, IHostingEnvironment _appEnvironment)
+        internal static object SaveImage(string base64, string name, string type, IHostingEnvironment _appEnvironment, string dir)
         {
             try
             {
-                string path = _appEnvironment.ContentRootPath + @"/wwwroot/assets/";  //.Current.Server.MapPath("~/ImageStorage"); //Path
+                string path = $"{_appEnvironment.ContentRootPath}/wwwroot/uploads/{dir}";  
 
                 //Check if directory exist
                 if (!System.IO.Directory.Exists(path))
@@ -58,6 +58,40 @@ namespace API.Helpers
                 return ex.Message;
             }
 
+        }
+
+        internal static object GetFiles(IHostingEnvironment _appEnvironment, string dir)
+        {
+            try
+            {
+                string path = $"{_appEnvironment.ContentRootPath}/wwwroot/uploads/{dir}";
+                List<string> files = new List<string>();
+                if (!System.IO.Directory.Exists(path))
+                    return files;
+                string[] fileEntries = Directory.GetFiles(path);
+                foreach (string fileName in fileEntries)
+                   files.Add(fileName.Split("wwwroot/")[1]);
+                return files;
+            }
+            catch (Exception ex)
+            {
+
+                return ex.Message;
+            }
+        }
+
+        internal static object DeleteFile(string path, IHostingEnvironment appEnvironment)
+        {
+            try
+            {
+                string fullPath = $"{appEnvironment.ContentRootPath}/wwwroot/{path}";  
+                File.Delete(fullPath);
+                return true;
+            }
+            catch (System.Exception e)
+            {
+               return e.Message;
+            }
         }
     }
 }

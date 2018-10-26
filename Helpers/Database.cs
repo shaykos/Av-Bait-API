@@ -9,9 +9,9 @@ namespace API.Helpers
     {
         public Database()
         {
-            this.Con = new SqlConnection(@"Server=.\SQLEXPRESS;Database=AvBaitAdmin;Trusted_Connection=True"); //dev 
+            //this.Con = new SqlConnection(@"Server=.\SQLEXPRESS;Database=DB_9FBCC4_insurance;Trusted_Connection=True"); //dev 
 
-            //this.Con = new SqlConnection(); //prod 
+            this.Con = new SqlConnection(@"Data Source=SQL5037.site4now.net;Initial Catalog=DB_9FBCC4_insurance;User Id=DB_9FBCC4_insurance_admin;Password=insu357241;"); //prod 
 
         }
         public SqlConnection Con { get; private set; }
