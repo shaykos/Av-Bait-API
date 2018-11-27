@@ -377,6 +377,9 @@ as
 		select [Id], [Name], [IsEmployee] from [dbo].[Handymen] where [Id] in ( --filter by company
 			select [HandymanId] from [dbo].[HandymanInBusieness] where [BusinessId] = (select [BusinessId] from [dbo].[Orders] where [Id] = @OrderId)
 		)
+		and [Id] in ( --filter by category
+			select [HandymanId] from [dbo].[HandymenCategories] where [CategoryId] = (select [CategoryId] from [dbo].[Problems] where [Id] = (select [ProblemId] from [dbo].[Orders] where [Id] = @OrderId))
+		)
 		and [Id] in( --filter by area
 			select [HandymanId] from [dbo].[HandymenInArea] where [AreaId] = (select [AreaId] from [dbo].[Cities] where [Id] = dbo.GetOrderCityCode(@OrderId)) 
 		)
@@ -427,4 +430,240 @@ as
 	commit tran
 go
 
+create proc UpdateCompanyLogo
+	@CompanyId int,
+	@Logo nvarchar(max)
+as
+	begin tran
+		update [dbo].[InsuranceCompanies]
+			set [Logo] = @Logo
+			where [Id] = @CompanyId
+	if @@error <> 0
+		begin
+			rollback tran
+			return
+		end
+	commit tran
+go
+
+create proc AddCompany
+	@Name nvarchar(max)
+as
+	begin tran
+		if not exists(select [Id] from [dbo].[InsuranceCompanies] where [Name] = @Name)
+			begin
+				insert into [dbo].[InsuranceCompanies]([Name])
+					values(@Name)
+				select cast(@@IDENTITY as nvarchar(max)) as [Id]
+			end
+		else
+			select '0' as [Id]		
+	if @@error <> 0
+		begin
+			rollback tran
+			return
+		end
+	commit tran
+go
+
+create function GetHandymanCategories(@HandymanId int)
+returns table
+as 
+	return (
+		select [Id] from [dbo].[Categories] where [Id] in (
+			select [CategoryId] from [dbo].[HandymenCategories] where [HandymanId] = @HandymanId
+		)
+	)
+go
+
+create function GetHandymanBusinesses(@HandymanId int)
+returns table
+as 
+	return (
+		select [Id] from [dbo].[Business] where [Id] in (
+			select [BusinessId] from [dbo].[HandymanInBusieness] where [HandymanId] = @HandymanId
+		)
+	)
+go
+
+create function GetHandymanAreas(@HandymanId int)
+returns table
+as 
+	return (
+		select [Id] from [dbo].[Areas] where [Id] in (
+			select [AreaId] from [dbo].[HandymenInArea] where [HandymanId] = @HandymanId
+		)
+	)
+go
+
+create proc AddHandyman
+	 @Name nvarchar(max), 
+	 @Color nvarchar(max), 
+	 @BackgroundColor nvarchar(max), 
+	 @Email nvarchar(max), 
+	 @Password varchar(max), 
+	 @IsEmployee bit
+as
+	begin tran
+		insert into [dbo].[Handymen]([Name], [Color], [BackgroundColor], [Email], [Password], [IsEmployee])
+			values(@Name, @Color, @BackgroundColor, @Email, @Password, @IsEmployee)
+		select cast(@@IDENTITY as varchar(max)) as [Id]
+	if @@error <> 0
+		begin
+			rollback tran
+			return
+		end
+	commit tran
+go
+
+create proc AddHandymanCategory
+	@HandymanId int,	
+	@CategoryId int
+as
+	begin tran
+		insert into [dbo].[HandymenCategories](HandymanId, CategoryId)
+			values(@HandymanId,@CategoryId)
+	if @@error <> 0
+		begin
+			rollback tran
+			return 
+		end
+	commit tran
+go
+
+create proc AddHandymanBusniess
+	@HandymanId int,	
+	@BusniessId int
+as
+	begin tran
+		insert into [dbo].[HandymanInBusieness](BusinessId, HandymanId)
+			values(@BusniessId,@HandymanId)
+	if @@error <> 0
+		begin
+			rollback tran
+			return 
+		end
+	commit tran
+go
+
+create proc AddHandymanArea
+	@HandymanId int,	
+	@AreaId int
+as
+	begin tran
+		insert into [dbo].[HandymenInArea](HandymanId, AreaId)
+			values(@HandymanId, @AreaId)
+	if @@error <> 0
+		begin
+			rollback tran
+			return 
+		end
+	commit tran
+go
+
+create proc ClearHandymanBeforeUpdate
+	@HandymanId int
+as
+	begin tran
+		delete from [dbo].[HandymenInArea] where [HandymanId] = @HandymanId
+		delete from [dbo].[HandymanInBusieness] where [HandymanId] = @HandymanId
+		delete from [dbo].[HandymenCategories] where [HandymanId] = @HandymanId
+	if @@error <> 0
+		begin
+			rollback tran
+			return 
+		end
+	commit tran
+go
+
+create proc DeleteHandyman
+	@HandymanId int
+as
+	begin tran
+		delete from [dbo].[HandymenInArea] where [HandymanId] = @HandymanId
+		delete from [dbo].[HandymanInBusieness] where [HandymanId] = @HandymanId
+		delete from [dbo].[HandymenCategories] where [HandymanId] = @HandymanId
+		delete from [dbo].[Handymen] where [Id] = @HandymanId
+	if @@error <> 0
+		begin
+			rollback tran
+			return 
+		end
+	commit tran
+go
+
+create proc UpdateHandyman
+	 @Id int,
+	 @Name nvarchar(max), 
+	 @Color nvarchar(max), 
+	 @BackgroundColor nvarchar(max), 
+	 @Email nvarchar(max), 
+	 @Password varchar(max), 
+	 @IsEmployee bit
+as
+	begin tran
+		update [dbo].[Handymen]
+			set [Name] = @Name,
+				[Color] = @Color,
+				[BackgroundColor] = @BackgroundColor,
+				[Email] = @Email,
+				[IsEmployee] = @IsEmployee
+			where [Id] = @Id
+		if (@Password <> '')
+			update [dbo].[Handymen]
+				set [Password] = @Password
+				where [Id] = @Id 
+	if @@error <> 0
+		begin
+			rollback tran
+			return
+		end
+	commit tran
+go
+
+create proc AddCategory
+	@Name nvarchar(max)
+as
+	begin tran
+		if not exists(select [Id] from [dbo].[Categories] where [Name] = @Name)
+			begin
+				insert into [dbo].[Categories]([Name])
+					values(@Name)
+				select cast(@@IDENTITY as nvarchar(max)) as [Id]
+			end
+		else
+			select '0' as [Id]
+	if @@error <> 0
+		begin
+			rollback tran
+			return
+		end
+	commit tran
+go
+
+create proc AddProblem
+	@Name nvarchar(max),
+	@CategoryId int
+as
+	begin tran
+		if not exists(select [Id] from [dbo].[Problems] where [Name] = @Name and [CategoryId] = @CategoryId) 
+			begin
+				insert into [dbo].[Problems]([Name],[CategoryId])
+					values(@Name, @CategoryId)
+				select cast(@@IDENTITY as nvarchar(max)) as [Id]
+			end
+		else
+			select '0' as [Id]
+	if @@error <> 0
+		begin
+			rollback tran
+			return
+		end
+	commit tran
+go
+
+
+--BACKUP DATABASE [DB_9FBCC4_insurance]
+--TO DISK='E:\Av-Bait\Database\DB_9FBCC4_insurance.bak'
+--go
 

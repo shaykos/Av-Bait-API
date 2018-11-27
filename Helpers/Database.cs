@@ -27,43 +27,74 @@ namespace API.Helpers
 
         public int ExecNonQuery(string sql, Dictionary<string, object> p)
         {
-            SqlCommand cmd = new SqlCommand(sql, GetConnestion());
             int rowsaffected = -1;
-            cmd.CommandType = CommandType.StoredProcedure;
-            if (!Service.IsNullOrEmpty(p))
-                foreach (string key in p.Keys)
-                {
-                    cmd.Parameters.Add(new SqlParameter(key, p[key]));
-                }
+            try
+            {
+                SqlCommand cmd = new SqlCommand(sql, GetConnestion());
+                cmd.CommandType = CommandType.StoredProcedure;
+                if (!Service.IsNullOrEmpty(p))
+                    foreach (string key in p.Keys)
+                    {
+                        cmd.Parameters.Add(new SqlParameter(key, p[key]));
+                    }
 
-            rowsaffected = cmd.ExecuteNonQuery();
-            Con.Close();
+                rowsaffected = cmd.ExecuteNonQuery();
+
+
+            }
+            catch (System.Exception)
+            {
+            }
+            finally
+            {
+                Con.Close();
+            }
             return rowsaffected;
         }
 
         public object ExecScalar(string sql)
         {
-            SqlCommand cmd = new SqlCommand(sql, GetConnestion());
             object obj = -1;
-            obj = cmd.ExecuteScalar();
-            Con.Close();
+            try
+            {
+                SqlCommand cmd = new SqlCommand(sql, GetConnestion());
+                obj = cmd.ExecuteScalar();
+            }
+            catch (System.Exception)
+            {
+            }
+            finally
+            {
+                Con.Close();
+            }
             return obj;
+
         }
 
         public DataTable ExecReader(string sql, Dictionary<string, object> p = null, string type = "")
         {
-            SqlCommand cmd = new SqlCommand(sql, GetConnestion());
-            SqlDataReader sdr;
             DataTable dt = new DataTable();
-            cmd.CommandType = (type == "proc") ? CommandType.StoredProcedure : CommandType.Text;
-            if (!Service.IsNullOrEmpty(p))
-                foreach (string key in p.Keys)
-                {
-                    cmd.Parameters.Add(new SqlParameter(key, p[key]));
-                }
-            sdr = cmd.ExecuteReader();
-            dt.Load(sdr);
-            Con.Close();
+            try
+            {
+                SqlCommand cmd = new SqlCommand(sql, GetConnestion());
+                SqlDataReader sdr;
+                cmd.CommandType = (type == "proc") ? CommandType.StoredProcedure : CommandType.Text;
+                if (!Service.IsNullOrEmpty(p))
+                    foreach (string key in p.Keys)
+                    {
+                        cmd.Parameters.Add(new SqlParameter(key, p[key]));
+                    }
+                sdr = cmd.ExecuteReader();
+                dt.Load(sdr);
+            }
+            catch (System.Exception)
+            {
+
+            }
+            finally
+            {
+                Con.Close();
+            }
             return dt;
         }
     }
